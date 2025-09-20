@@ -67,9 +67,10 @@ function App() {
   const [long, setLong] = useState(0);
   const [wind, setWind] = useState(0);
   const [humidity, setHumidity] = useState(0);
-  const [text, setText] = useState("Mannargudi");
-  const [loading, setLoading] = useState("");
-  const [cityNotFound, setCityNotFound] = useState("");
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [cityNotFound, setCityNotFound] = useState(false);
+  const [error, setError] = useState("");
 
   const weatherIconMap = {
     "01d": clearIcon,
@@ -88,9 +89,12 @@ function App() {
     "13n": rainIcon,
   };
 
-  const search = async () => {
+  const defaultCity = "Mannargudi";
+
+  const search = async (cityName = text) => {
+    if (!cityName) return;
     setLoading(true);
-    let URL = `https://api.openweathermap.org/data/2.5/weather?q=${text}&appid=${api_key}&units=metric`;
+    let URL = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${api_key}&units=metric`;
     try {
       let res = await fetch(URL);
       let data = await res.json();
@@ -113,6 +117,7 @@ function App() {
       }
     } catch (error) {
       console.error("An error occurred:", error.message);
+      setError(error);
     } finally {
       setLoading(false);
     }
@@ -124,12 +129,12 @@ function App() {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      search();
+      search(text);
     }
   };
 
   useEffect(function () {
-    search();
+    search(defaultCity);
   }, []);
 
   return (
@@ -144,22 +149,30 @@ function App() {
             value={text}
             onKeyDown={handleKeyDown}
           />
-          <div className="search-city" onClick={() => search()}>
+          <div className="search-city" onClick={() => search(text)}>
             <img src={searchIcon} alt="search" />
           </div>
         </div>
-        <WeatherDetails
-          icon={icon}
-          temp={temp}
-          city={city}
-          country={country}
-          lat={lat}
-          long={long}
-          wind={wind}
-          humidity={humidity}
-        />
+        {!loading && !error && !cityNotFound && (
+          <WeatherDetails
+            icon={icon}
+            temp={temp}
+            city={city}
+            country={country}
+            lat={lat}
+            long={long}
+            wind={wind}
+            humidity={humidity}
+          />
+        )}
+        {loading && <div className="loading-message">Loading...</div>}
+        {cityNotFound && <div className="error-message">{error}</div>}
+        {error && <div className="city-not-found">City not found</div>}
         <p className="copyright">
-          Designed by <a href="">Ajay</a>
+          Designed by{" "}
+          <a href="https://github.com/AjayAnandhan/weather-app" target="_blank">
+            Ajay
+          </a>
         </p>
       </div>
     </>
